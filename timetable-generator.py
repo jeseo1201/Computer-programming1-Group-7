@@ -1,4 +1,4 @@
-﻿"""
+"""
 시간표 자동 생성기 (2026학년도 1학기) - 17학점 맞춤형
 실행 방법: 이 .py 파일과 subjectTable.csv를 같은 폴더에 두고 실행
 """
@@ -26,6 +26,15 @@ def parseCredit(value):
     except Exception:
         return 0
 
+class Subject:
+    def __init__(self, row):
+        self.name = clean(row.get('교과목명', ''))
+        self.section = clean(row.get('분반', ''))
+        self.credit = parseCredit(row.get('시간/학점', '0/0'))
+        self.time = clean(row.get('요일및교시(강의실)', ''))
+        self.prof = clean(row.get('담당교수', ''))
+        self.type = clean(row.get('1전공기준 이수구분', ''))
+
 def parseSlots(timeText):
     slots = set()
     if clean(timeText) == '':
@@ -52,14 +61,7 @@ def parseSlots(timeText):
     return slots
 
 def rowToInfo(row):
-    return {
-        'name': clean(row.get('교과목명', '')),
-        'section': clean(row.get('분반', '')),
-        'credit': parseCredit(row.get('시간/학점', '0/0')),
-        'time': clean(row.get('요일및교시(강의실)', '')),
-        'prof': clean(row.get('담당교수', '')),
-        'type': clean(row.get('1전공기준 이수구분', '')),
-    }
+    return Subject(row)
 
 def uniqueNames(rows):
     result = []
@@ -77,7 +79,7 @@ def findCombos(pools, targetCredit=17, maxResults=5):
             return
 
         if idx == len(pools):
-            total = sum(item['credit'] for item in chosen)
+            total = sum(item.credit for item in chosen)
             if total == targetCredit:
                 results.append(chosen[:])
             return
@@ -86,18 +88,18 @@ def findCombos(pools, targetCredit=17, maxResults=5):
         random.shuffle(pool)
 
         for subject in pool:
-            if subject['name'] in usedNames:
+            if subject.name in usedNames:
                 continue
 
-            slots = parseSlots(subject['time'])
+            slots = parseSlots(subject.time)
             if usedSlots & slots:
                 continue
 
             chosen.append(subject)
-            usedNames.add(subject['name'])
+            usedNames.add(subject.name)
             backtrack(idx + 1, chosen, usedSlots | slots, usedNames)
             chosen.pop()
-            usedNames.remove(subject['name'])
+            usedNames.remove(subject.name)
 
     backtrack(0, [], set(), set())
     return results
@@ -135,7 +137,7 @@ def printTimetable(subjects):
     grid = {}
 
     for subject in subjects:
-        for part in subject['time'].split(','):
+        for part in subject.time.split(','):
             part = part.strip().split('(')[0]
             if len(part) < 2:
                 continue
@@ -150,11 +152,11 @@ def printTimetable(subjects):
                 if '~' in timePart:
                     start, end = map(int, timePart.split('~'))
                     for period in range(start, end + 1):
-                        grid[(day, period)] = subject['name']
+                        grid[(day, period)] = subject.name
                         usedDays.add(day)
                 else:
                     period = int(timePart)
-                    grid[(day, period)] = subject['name']
+                    grid[(day, period)] = subject.name
                     usedDays.add(day)
             except Exception:
                 pass
@@ -203,15 +205,15 @@ def printResult(results):
         return
 
     for idx, result in enumerate(results, 1):
-        total = sum(subject['credit'] for subject in result)
+        total = sum(subject.credit for subject in result)
         print(f'\n[추천 시간표 #{idx}] 총 {total}학점')
         printTimetable(result)
 
         print('\n  과목 요약:')
         for subject in result:
             print(
-                f"  - [{subject['type']}] {subject['name']} "
-                f"| {subject['section']}분반 | {subject['credit']}학점 | {subject['prof']}"
+                f"  - [{subject.type}] {subject.name} "
+                f"| {subject.section}분반 | {subject.credit}학점 | {subject.prof}"
             )
 
 def run():
@@ -338,3 +340,4 @@ def run():
 
 if __name__ == '__main__':
     run()
+
