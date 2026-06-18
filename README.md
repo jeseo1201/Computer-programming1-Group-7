@@ -1,5 +1,5 @@
-# Computer-programming1-Group-5
-가톨릭대학교 컴퓨터와프로그래밍1 5조 팀 프로젝트
+# Computer-programming1-Group-7
+가톨릭대학교 컴퓨터와프로그래밍1 7조 팀 프로젝트
 
 팀장: 허제서
 팀원: 박수현, 서효민, 이남명, 주지한
